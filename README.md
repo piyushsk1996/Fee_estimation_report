@@ -7,4 +7,8 @@ Create Following folders in the main program dir:
 3.All_Pdf_Files --> Download directory for pdf files that are being downloaded using web-scraper
 4.Excel_files --> Final Excel file
 
-Put chemo auth report and asp pricing list excelfiles into All_Files folder
+chromedriver.exe should be at project level directory
+
+Put chemo auth report and asp pricing list excel files into All_Files folder
+
+execute main_function.py
