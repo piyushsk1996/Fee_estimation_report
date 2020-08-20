@@ -1,3 +1,12 @@
+# Folders
+All_CSVs
+All_Files
+All_Pdf_Files
+automation_files
+Excel_files
+pdfs
+venv-camelot
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
