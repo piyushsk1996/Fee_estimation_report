@@ -14,7 +14,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 def pdf_downloader():
-    download_dir = r"C:\Users\piyus\PycharmProjects\Camelot-POC\All_Pdf_Files"
+    download_dir = r"./All_Pdf_Files/"
 
     # date=date.today()
     chrome_options = Options()
