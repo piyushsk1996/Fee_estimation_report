@@ -10,3 +10,5 @@ Create Following folders in the main program dir:
 chromedriver.exe should be at project level directory
 
 Put chemo auth report and asp pricing list excel files into All_Files folder
+
+execute main_function.py
