@@ -106,7 +106,7 @@ def generate_excel(filename, foldername):
     worksheet.write("G2", "Patient treatment", header_format)
 
     # Reading report
-    df_data_auth_report = pd.read_excel("./automation_files/OMG 0702 Chemo Auth Report.xlsx")
+    df_data_auth_report = pd.read_excel("./All_Files/OMG 0702 Chemo Auth Report.xlsx")
 
     # Setting NAN values to zero for easier handling
     df_data_auth_report = df_data_auth_report.fillna(0)
@@ -215,7 +215,7 @@ def generate_excel(filename, foldername):
                 except Exception as e:
                     treatment_name_part2 = None
 
-                df_codes = pd.read_excel("./automation_files/ASP Pricing Copy.xlsx")
+                df_codes = pd.read_excel("./All_Files/ASP Pricing Copy.xlsx")
                 df_codes['Short Description'] = df_codes['Short Description'].str.upper()
                 for index, row in df_codes.iterrows():
                     try:
@@ -237,7 +237,7 @@ def generate_excel(filename, foldername):
             except Exception as e:
                 treatment_name_part2 = None
 
-            df_codes = pd.read_excel("./automation_files/ASP Pricing Copy.xlsx")
+            df_codes = pd.read_excel("./All_Files/ASP Pricing Copy.xlsx")
             for index, row in df_codes.iterrows():
                 if treatment_name_part1 in row['Short Description']:
                     hcpcs_code = df_codes.loc[index, "HCPCS Code"]

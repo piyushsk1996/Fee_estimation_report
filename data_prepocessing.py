@@ -3,12 +3,14 @@ import pandas as pd
 import os
 import numpy as np
 from datetime import date
+
 # Setting Options for printing pandas dataframe
 desired_width = 520
 # Setting up Display length of dataframe
 pd.set_option('display.width', desired_width)
 # Setting up maximum no. of dataframe columns to display
 pd.set_option('display.max_columns', 25)
+
 
 # Reading pdf data and pre-processing it with given conditions
 def pre_process_data():
@@ -65,7 +67,7 @@ def pre_process_data():
                                             if "\n" in test_df.loc[j, k]:
                                                 treatment_string = test_df.loc[j, k].replace("\n", " ")
                                             else:
-                                            # else assigning it as it is
+                                                # else assigning it as it is
                                                 treatment_string = test_df.loc[j, k]
                                             # Checking for drug-condtions
                                             # 1. Sodium Chloride
