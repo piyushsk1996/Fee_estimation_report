@@ -31,8 +31,8 @@ if __name__ == '__main__':
     # Downloading PDF's
     pdfDownload.pdf_downloader()
     # Pre-process the data
-    data_prepocessing.pre_process_data()
+    # data_prepocessing.pre_process_data()
     # Remove downloaded pdf's
-    remove_pdfs()
+    # remove_pdfs()
     # Generate Excel report
-    excel_writer_module.generate_excel(filename='MHP FEE ESTIMATE Excel Report.xlsx', foldername='Excel_files')
+    # excel_writer_module.generate_excel(filename='MHP FEE ESTIMATE Excel Report.xlsx', foldername='Excel_files')

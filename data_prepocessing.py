@@ -2,7 +2,7 @@ import camelot
 import pandas as pd
 import os
 import numpy as np
-
+from datetime import date
 # Setting Options for printing pandas dataframe
 desired_width = 520
 # Setting up Display length of dataframe

@@ -10,11 +10,16 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver import ActionChains
 import pandas as pd
 from webdriver_manager.chrome import ChromeDriverManager
-
+from pathlib import Path
 
 
 def pdf_downloader():
-    download_dir = r"./All_Pdf_Files/"
+    mypath = Path().absolute()
+
+    # Defining path of the files
+
+    pdfpath = mypath / 'All_Pdf_Files'
+    download_dir = str(pdfpath)
 
     # date=date.today()
     chrome_options = Options()
