@@ -34,13 +34,16 @@ def pre_process_data():
             # Maximum range of 4 to cover all tables
             for i in range(4):
                 try:
+
                     # Converting tables to dataframe and indexing them using counter i
                     test_df = tables[i].df
+
                     if i == 0:
                         # Retriving patient name
                         patient_name = str(test_df.loc[0, 5]).replace("Patient:\n", "").split('\n')[0]
 
-                    if "PRE-TREATMENT" == test_df.loc[0, 0] or "TREATMENT" == test_df.loc[0, 0]:
+                    if "PRE-TREATMENT" == str(test_df.loc[0, 0]) or "TREATMENT" == str(test_df.loc[0, 0]):
+                        # print(str(test_df.loc[0, 0].split()))
                         # Initialzing empty dictionary to store treatment data
                         treatment_dict = dict()
                         # Getting Patient Name:
@@ -50,9 +53,9 @@ def pre_process_data():
 
                         # Getting Type of treatment
                         type_of_treatment = test_df.loc[0, 0]
-
                         # Appending type of treatment to dictionarty treament_dict
                         treatment_dict.setdefault("Type of treatment", []).append(type_of_treatment)
+
                         # Looping through dataframe obtained from tables and processing it with conditions specified
                         for j in range(len(test_df)):
                             # Looping throgh dataframe columns to scan the dataframe
@@ -63,23 +66,27 @@ def pre_process_data():
                                     if test_df.loc[j, k]:
                                         # checking if value is a type of treatment
                                         if test_df.loc[j, k] != treatment_dict["Type of treatment"][0]:
-                                            # checking for new line charater and replacing it with a space
-                                            if "\n" in test_df.loc[j, k]:
-                                                treatment_string = test_df.loc[j, k].replace("\n", " ")
+
+                                            if "Dosed" not in test_df.loc[j, k]:
+                                                # checking for new line character and replacing it with a space
+                                                if "\n" in test_df.loc[j, k]:
+
+                                                    treatment_string = test_df.loc[j, k].replace("\n", " ")
+                                                else:
+                                                    # else assigning it as it is
+                                                    treatment_string = test_df.loc[j, k]
                                             else:
-                                                # else assigning it as it is
-                                                treatment_string = test_df.loc[j, k]
+                                                continue
                                             # Checking for drug-condtions
                                             # 1. Sodium Chloride
-                                            # 2. Oral drugs ( to be added)
-                                            # 3. Famotidine ( to be added)
-                                            # 4. Tylenol ( to be added )
+                                            # 2. Oral drugs (to be added)
+                                            # 3. Famotidine (to be added)
+                                            # 4. Tylenol (to be added)
                                             # Breaking if keyword is encountered while scanning dataframe
-                                            if "sodium chloride" in treatment_string:
-                                                break
-                                            else:
+                                            if "sodium chloride" not in treatment_string:
                                                 # Getting Treatment
                                                 treatment_dict.setdefault("Treatment", []).append(treatment_string)
+
                                             # using trailing row variable to skip the rows
                                             trailin_row = j + 1
                                 # Scanning column 1
@@ -91,8 +98,10 @@ def pre_process_data():
                                             # checking whether date tuple is in the value or not
                                             if "(d" not in test_df.loc[j, k]:
                                                 # Getting Dosage
+
                                                 dosage_string = str(test_df.loc[j, k]).split('\n')[0]
-                                                treatment_dict.setdefault("Dosage", []).append(dosage_string)
+                                                if "150 mL at 50 mL/hr" not in dosage_string:
+                                                    treatment_dict.setdefault("Dosage", []).append(dosage_string)
                                                 # # Getting Procedure
                                                 # procedure_string = str(test_df.loc[j, k]).replace('\n', ' ').replace(
                                                 #     dosage_string, '', 1)
@@ -100,7 +109,8 @@ def pre_process_data():
 
                         # Constructing dataframe from dictionary values
                         df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in treatment_dict.items()]))
-                        # Concatinating dataframe to final_df and reassigning it to add multiple dataframes into one dataframe
+                        # Concatinating dataframe to final_df and reassigning it to add multiple dataframes into one
+                        # dataframe
                         final_df = pd.concat([final_df, df], axis=0)
                 # Catch the exception
                 except Exception as e:

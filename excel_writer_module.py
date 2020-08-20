@@ -226,6 +226,8 @@ def generate_excel(filename, foldername):
                         elif treatment_name_part2 is not None and treatment_name_part2 in row['Short Description']:
                             hcpcs_code = df_codes.loc[index, "HCPCS Code"]
                             print(hcpcs_code)
+                        else:
+                            hcpcs_code = None
                     except Exception as e:
                         hcpcs_code = None
 
