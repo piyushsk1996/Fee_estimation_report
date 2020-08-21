@@ -30,7 +30,8 @@ def pre_process_data():
         for file in files:
             print(file)
             # Getting Tables using camelot and setting options line scale=40 and shift text = ['']
-            tables = camelot.read_pdf("./All_Pdf_Files/" + file, line_scale=40, shift_text=[''])
+            tables = camelot.read_pdf("./All_Pdf_Files/" + file, line_scale=40, shift_text=[' '],
+                                      layout_kwargs={'detect_vertical': False})
             # Maximum range of 4 to cover all tables
             for i in range(4):
                 try:
@@ -43,73 +44,51 @@ def pre_process_data():
                         patient_name = str(test_df.loc[0, 5]).replace("Patient:\n", "").split('\n')[0]
 
                     if "PRE-TREATMENT" == str(test_df.loc[0, 0]) or "TREATMENT" == str(test_df.loc[0, 0]):
+
                         # print(str(test_df.loc[0, 0].split()))
                         # Initialzing empty dictionary to store treatment data
                         treatment_dict = dict()
                         # Getting Patient Name:
                         treatment_dict.setdefault("Patient Name", []).append(patient_name)
                         # Getting Patient ID
-                        # treatment_dict.setdefault("Patient ID", []).append(file.split('.')[0])
+                        treatment_dict.setdefault("Patient ID", []).append(file.split('.')[0])
 
                         # Getting Type of treatment
                         type_of_treatment = test_df.loc[0, 0]
                         # Appending type of treatment to dictionarty treament_dict
                         treatment_dict.setdefault("Type of treatment", []).append(type_of_treatment)
+                        print(test_df)
+                        if "magnesium sulfate" in test_df[1].values:
+                            test_df[0] = test_df[0] + test_df[1]
+                            test_df[1] = test_df[2]
 
-                        # Looping through dataframe obtained from tables and processing it with conditions specified
-                        for j in range(len(test_df)):
-                            # Looping throgh dataframe columns to scan the dataframe
-                            for k in range(len(test_df.columns)):
-                                # Scanning column 0
-                                if k == 0:
-                                    # checking if any value exists
-                                    if test_df.loc[j, k]:
-                                        # checking if value is a type of treatment
-                                        if test_df.loc[j, k] != treatment_dict["Type of treatment"][0]:
+                        test_df.replace('', 0, inplace=True)
+                        print(test_df)
+                        for index, row in test_df.iterrows():
 
-                                            if "Dosed" not in test_df.loc[j, k]:
-                                                # checking for new line character and replacing it with a space
-                                                if "\n" in test_df.loc[j, k]:
-
-                                                    treatment_string = test_df.loc[j, k].replace("\n", " ")
-                                                else:
-                                                    # else assigning it as it is
-                                                    treatment_string = test_df.loc[j, k]
+                            if index != 0 and str(row[0]) != str(0):
+                                if "sodium chloride" not in str(row[0]):
+                                    if "magnesium" not in str(row[0]):
+                                        if "potassium" not in str(row[0]):
+                                            if "immune" in str(row[0]):
+                                                treatment = str(row[0])
                                             else:
-                                                continue
-                                            # Checking for drug-condtions
-                                            # 1. Sodium Chloride
-                                            # 2. Oral drugs (to be added)
-                                            # 3. Famotidine (to be added)
-                                            # 4. Tylenol (to be added)
-                                            # Breaking if keyword is encountered while scanning dataframe
-                                            if "sodium chloride" not in treatment_string:
-                                                # Getting Treatment
-                                                treatment_dict.setdefault("Treatment", []).append(treatment_string)
+                                                treatment = str(row[0]).split(' ')[0]
+                                            if ")" not in treatment:
+                                                if "Delivery" not in treatment:
+                                                    if "Dosed" not in treatment:
+                                                        if "LAR" not in treatment:
+                                                            if "(" not in treatment:
+                                                                treatment_dict.setdefault("Treatment", []).append(treatment)
 
-                                            # using trailing row variable to skip the rows
-                                            trailin_row = j + 1
-                                # Scanning column 1
-                                elif k == 1:
-                                    # checkig if value exists
-                                    if test_df.loc[j, k]:
-                                        # Using trailing row to skip empty rows
-                                        if j != trailin_row:
-                                            # checking whether date tuple is in the value or not
-                                            if "(d" not in test_df.loc[j, k]:
-                                                # Getting Dosage
-
-                                                dosage_string = str(test_df.loc[j, k]).split('\n')[0]
-                                                if "150 mL at 50 mL/hr" not in dosage_string:
-                                                    treatment_dict.setdefault("Dosage", []).append(dosage_string)
-                                                # # Getting Procedure
-                                                # procedure_string = str(test_df.loc[j, k]).replace('\n', ' ').replace(
-                                                #     dosage_string, '', 1)
-                                                # treatment_dict.setdefault("Procedure", []).append(procedure_string)
+                                                    dosage = str(row[1]).split('\n')[0]
+                                                    if "(d" not in dosage:
+                                                        treatment_dict.setdefault("Dosage", []).append(dosage)
 
                         # Constructing dataframe from dictionary values
                         df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in treatment_dict.items()]))
-                        # Concatinating dataframe to final_df and reassigning it to add multiple dataframes into one
+
+                        # Concatenating dataframe to final_df and reassigning it to add multiple dataframes into one
                         # dataframe
                         final_df = pd.concat([final_df, df], axis=0)
                 # Catch the exception
@@ -117,9 +96,14 @@ def pre_process_data():
                     print("Couldn't find more tables")
     # Filling NAN values with zeros
     final_df = final_df.fillna(0)
+    for index, row in final_df.iterrows():
+        if "mL/hr" in str(row["Dosage"]):
+            row["Dosage"] = 0
+            row["Treatment"] = 0
     # Reseting index to get new index
     final_df.reset_index(drop=True, inplace=True)
     # Dropping rows from dataframe based on given condition
+    # Dropping rows where dosage and treatment is null
     final_df = final_df.drop(final_df[(final_df.Treatment == 0) & (final_df.Dosage == 0)].index)
     # Replacing zero values to nan
     final_df.replace(0, np.nan, inplace=True)

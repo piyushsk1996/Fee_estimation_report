@@ -9,7 +9,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver import ActionChains
 import pandas as pd
-from webdriver_manager.chrome import ChromeDriverManager
 from pathlib import Path
 
 

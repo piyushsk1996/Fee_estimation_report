@@ -107,148 +107,98 @@ def generate_excel(filename, foldername):
 
     # Reading report
     df_data_auth_report = pd.read_excel("./All_Files/OMG 0702 Chemo Auth Report.xlsx")
-
+    # Upper casing patient name column for matching
+    df_data_auth_report['Patient Name'] = df_data_auth_report['Patient Name'].str.upper()
     # Setting NAN values to zero for easier handling
     df_data_auth_report = df_data_auth_report.fillna(0)
 
     # Reading CSV with treatment information
     df_read_csv = pd.read_csv('./All_CSVs/' + today_date + '.csv')
 
-    # Upper casing the patient name for merging operation
-    df_data_auth_report['Patient Name'] = df_data_auth_report['Patient Name'].str.upper()
-    # Merging Operation
-    df_merged = df_data_auth_report.merge(df_read_csv, on='Patient Name', how='left')
-
     # Create list of rows to be deleted according to the given conditions
     # 1. Sodium Chloride
     # 2. Oral Drugs ( to be added)
     # 3. Famotidine (to be added. Scenario to be tested)
     # 4. Tylenol (to be added. Scenario to be tested)
+    # Dropping rows from dataframe based on given condition
 
-    delete_rows = list()
 
-    # iterating through rows to detect keywords
-    for index, row in df_merged.iterrows():
-        for col in df_merged.columns:
-            if col == "Treatment":
-                # Condition for deletion
-                if "sodium chloride" in str(row[col]):
-                    # Retrieving Index
-                    store_index = index
-                    # Appending index to the list
-                    delete_rows.append(store_index)
-
-    # Deleting rows one by according to the given index
-    for i in delete_rows:
-        df_merged = df_merged.drop(df_merged.loc[i, :])
 
     # Outputting the merged dataframe to csv to check whether key words have been removed
-    df_merged.to_csv("1.csv")
-    df_merged = df_merged.fillna(0)
+    df_read_csv = df_read_csv.fillna(0)
+    df_read_csv.to_csv("1.csv")
+
     # Setting initial row number
     initial_row_no = 3
+    # calculating number of rows required for each patient
+    patient_dict = dict()
+
+    for name, treatment_name in zip(df_read_csv["Patient Name"], df_read_csv["Treatment"]):
+        if treatment_name != 0:
+
+            treatment = treatment_name.split(' ')[0]
+            df_codes = pd.read_excel("./All_Files/ASP Pricing Copy.xlsx")
+            df_codes['Short Description'] = df_codes['Short Description'].str.upper()
+            print(treatment.upper())
+            print(name)
+            for index, row in df_codes.iterrows():
+                if treatment.upper() in row['Short Description']:
+                    hcpcs_code = df_codes.loc[index, "HCPCS Code"]
+                    print(hcpcs_code)
+                    patient_dict.setdefault(name, []).append(hcpcs_code)
 
     # Looping through column Patient Name and writing each name to the excel sheet
-    for name_tuple, date_value, primary_insurance, secondary_insurance, location_name, treatment_name in zip(
-            previous_and_next(df_merged["Patient Name"]),
-            df_merged["Time"],
-            df_merged["Primary "
-                      "Insurance "
-                      "Name"],
-            df_merged["Secondary "
-                      "Insurance "
-                      "Name"],
-            df_merged["Location"],
-            df_merged["Treatment"]):
-        previous_name, name, nxt_name = name_tuple
-        if previous_name != name:
+    for name, date_value, primary_insurance, secondary_insurance, location_name in zip(
+            df_data_auth_report["Patient Name"],
+            df_data_auth_report["Time"],
+            df_data_auth_report["Primary "
+                                "Insurance "
+                                "Name"],
+            df_data_auth_report["Secondary "
+                                "Insurance "
+                                "Name"],
+            df_data_auth_report["Location"], ):
 
-            # Splitting Name in to first name and last name
-            first_name = name.split(',')[1]
-            last_name = name.split(',')[0]
+        # Splitting Name in to first name and last name
+        first_name = name.split(',')[1]
+        last_name = name.split(',')[0]
 
-            # Splitting report date
-            report_date = date_value.split(' ')[0]
-            date_time_obj = datetime.strptime(report_date, '%m-%d-%Y')
-            report_date_val = date_time_obj.strftime('%d-%m-%Y')
+        # Splitting report date
+        report_date = date_value.split(' ')[0]
+        date_time_obj = datetime.strptime(report_date, '%m-%d-%Y')
+        report_date_val = date_time_obj.strftime('%d-%m-%Y')
 
-            # Writing Names
-            worksheet.write(initial_row_no, 0, first_name + ' ' + last_name)
-            new_row_no = initial_row_no + 1
+        # Writing Names
+        worksheet.write(initial_row_no, 0, first_name + ' ' + last_name)
+        new_row_no = initial_row_no + 1
 
-            worksheet.write(new_row_no, 0, first_name + ' ' + last_name)
-            blank_row_no = new_row_no + 1
+        worksheet.write(new_row_no, 0, first_name + ' ' + last_name)
+        blank_row_no = new_row_no + 1
 
-            # Adding a blank row
-            worksheet.write_blank(blank_row_no, 0, None, cell_format)
+        # Adding a blank row
+        worksheet.write_blank(blank_row_no, 0, None, cell_format)
 
-            # Writing dates to the corresponding columns
-            worksheet.write(initial_row_no, 1, report_date_val)
-            worksheet.write(new_row_no, 1, report_date_val)
-            worksheet.write_blank(blank_row_no, 1, None, cell_format)
+        # Writing dates to the corresponding columns
+        worksheet.write(initial_row_no, 1, report_date_val)
+        worksheet.write(new_row_no, 1, report_date_val)
+        worksheet.write_blank(blank_row_no, 1, None, cell_format)
 
-            # Writing Location Name
-            worksheet.write(new_row_no, 2, location_name, custom_cell_format)
+        # Writing Location Name
+        worksheet.write(new_row_no, 2, location_name, custom_cell_format)
 
-            # Writing Primary Insurance Name
-            if primary_insurance == 0:
-                worksheet.write_blank(new_row_no, 3, None, custom_cell_format)
-            else:
-                worksheet.write(new_row_no, 3, primary_insurance, custom_cell_format)
-
-            # Writing Secondary Insurance Name
-            if secondary_insurance == 0:
-                worksheet.write_blank(new_row_no, 4, None, custom_cell_format)
-            else:
-                worksheet.write(new_row_no, 4, secondary_insurance, custom_cell_format)
-
-            worksheet.write_blank(new_row_no, 5, None, custom_cell_format)
-
-            if treatment_name == 0:
-                worksheet.write_blank(new_row_no, 6, None)
-            else:
-                print(name)
-                print(treatment_name)
-                treatment_name_part1 = treatment_name.split(' ')[0]
-                try:
-                    treatment_name_part2 = treatment_name.split(' ')[1]
-                except Exception as e:
-                    treatment_name_part2 = None
-
-                df_codes = pd.read_excel("./All_Files/ASP Pricing Copy.xlsx")
-                df_codes['Short Description'] = df_codes['Short Description'].str.upper()
-                for index, row in df_codes.iterrows():
-                    try:
-                        if treatment_name_part1.upper() in row['Short Description']:
-                            hcpcs_code = df_codes.loc[index, "HCPCS Code"]
-                            print(hcpcs_code)
-
-                        elif treatment_name_part2 is not None and treatment_name_part2 in row['Short Description']:
-                            hcpcs_code = df_codes.loc[index, "HCPCS Code"]
-                            print(hcpcs_code)
-                        else:
-                            hcpcs_code = None
-                    except Exception as e:
-                        hcpcs_code = None
-
-                worksheet.write(new_row_no - 1, 6, hcpcs_code, custom_cell_format)
+        # Writing Primary Insurance Name
+        if primary_insurance == 0:
+            worksheet.write_blank(new_row_no, 3, None, custom_cell_format)
         else:
-            treatment_name_part1 = treatment_name.split(' ')[0]
-            try:
-                treatment_name_part2 = treatment_name.split(' ')[1]
-            except Exception as e:
-                treatment_name_part2 = None
+            worksheet.write(new_row_no, 3, primary_insurance, custom_cell_format)
 
-            df_codes = pd.read_excel("./All_Files/ASP Pricing Copy.xlsx")
-            for index, row in df_codes.iterrows():
-                if treatment_name_part1 in row['Short Description']:
-                    hcpcs_code = df_codes.loc[index, "HCPCS Code"]
-                    print(hcpcs_code)
+        # Writing Secondary Insurance Name
+        if secondary_insurance == 0:
+            worksheet.write_blank(new_row_no, 4, None, custom_cell_format)
+        else:
+            worksheet.write(new_row_no, 4, secondary_insurance, custom_cell_format)
 
-                elif treatment_name_part2 is not None and treatment_name_part2 in row['Short Description']:
-                    hcpcs_code = df_codes.loc[index, "HCPCS Code"]
-                    print(hcpcs_code)
-            worksheet.write(initial_row_no - 4, 6, hcpcs_code, custom_cell_format)
+        worksheet.write_blank(new_row_no, 5, None, custom_cell_format)
 
         # Incrementing Counter
         initial_row_no += 3
@@ -258,4 +208,4 @@ def generate_excel(filename, foldername):
 
 if __name__ == '__main__':
     # Calling function
-    generate_excel()
+    generate_excel(filename='MHP FEE ESTIMATE Excel Report.xlsx', foldername='Excel_files')
