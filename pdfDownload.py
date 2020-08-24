@@ -63,7 +63,6 @@ def pdf_downloader():
 
             # time.sleep(3)
 
-            print("Program reached here 3")
             try:
 
                 waits('//*[@id="Billing_20Documents_tab"]/a')
@@ -141,7 +140,7 @@ def pdf_downloader():
             except Exception as e:
                 print("Couldnt Find Billing Documents")
                 pass
-            print("Program reached here 1")
+
             driver.find_element_by_xpath('//*[@id="wc_homeicon"]').click()
             # time.sleep(3)
             waits('//*[@id="patsearch"]/table/tbody/tr/td/div/div/ul')
