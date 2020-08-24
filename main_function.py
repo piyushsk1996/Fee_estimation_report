@@ -27,9 +27,11 @@ def remove_pdfs():
     return "Pdf's removed successfully"
 
 
+excel_filename = "OMG 0826 Chemo Auth Report"
+
 if __name__ == '__main__':
     # Downloading PDF's
-    # pdfDownload.pdf_downloader()
+    pdfDownload.pdf_downloader(excel_filename)
     # Pre-process the data
     data_prepocessing.pre_process_data()
     # Remove downloaded pdf's
