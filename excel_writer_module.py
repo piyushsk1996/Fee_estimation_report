@@ -122,31 +122,29 @@ def generate_excel(filename, foldername):
     # 4. Tylenol (to be added. Scenario to be tested)
     # Dropping rows from dataframe based on given condition
 
-
-
     # Outputting the merged dataframe to csv to check whether key words have been removed
-    df_read_csv = df_read_csv.fillna(0)
+
     df_read_csv.to_csv("1.csv")
 
     # Setting initial row number
     initial_row_no = 3
     # calculating number of rows required for each patient
     patient_dict = dict()
-
+    df_read_csv = df_read_csv.fillna(0)
     for name, treatment_name in zip(df_read_csv["Patient Name"], df_read_csv["Treatment"]):
         if treatment_name != 0:
 
             treatment = treatment_name.split(' ')[0]
             df_codes = pd.read_excel("./All_Files/ASP Pricing Copy.xlsx")
             df_codes['Short Description'] = df_codes['Short Description'].str.upper()
-            print(treatment.upper())
-            print(name)
+
             for index, row in df_codes.iterrows():
                 if treatment.upper() in row['Short Description']:
                     hcpcs_code = df_codes.loc[index, "HCPCS Code"]
-                    print(hcpcs_code)
-                    patient_dict.setdefault(name, []).append(hcpcs_code)
+                    if name != 0:
+                        patient_dict.setdefault(name, []).append(hcpcs_code)
 
+    print(patient_dict)
     # Looping through column Patient Name and writing each name to the excel sheet
     for name, date_value, primary_insurance, secondary_insurance, location_name in zip(
             df_data_auth_report["Patient Name"],
@@ -158,7 +156,7 @@ def generate_excel(filename, foldername):
                                 "Insurance "
                                 "Name"],
             df_data_auth_report["Location"], ):
-
+        print(name)
         # Splitting Name in to first name and last name
         first_name = name.split(',')[1]
         last_name = name.split(',')[0]

@@ -12,7 +12,7 @@ import pandas as pd
 from pathlib import Path
 
 
-def pdf_downloader(excel_filename, sheet_name_val):
+def pdf_downloader():
     mypath = Path().absolute()
 
     # Defining path of the files
@@ -37,7 +37,7 @@ def pdf_downloader(excel_filename, sheet_name_val):
     def waits(el):
         WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.XPATH, el)))
 
-    df = pd.read_excel(r"./All_Files/" + excel_filename + ".xlsx", sheet_name=sheet_name_val)
+    df = pd.read_excel(r"./All_Files/OMG 0826 Chemo Auth Report.xlsx", sheet_name='ApptData - 2020-08-19T144313.36')
 
     ##Login to site
 
@@ -56,7 +56,6 @@ def pdf_downloader(excel_filename, sheet_name_val):
             MrNo = MrNo[MrNoIndex:]
             MrNo = str(MrNo).split(',')[0]
             print(MrNo)
-            print("Current session is {}".format(driver.session_id))
             driver.find_element_by_xpath('//*[@id="patsearch"]/table/tbody/tr/td/label[1]/input').click()
             time.sleep(1)
             driver.find_element_by_xpath('//*[@id="patsearch"]/table/tbody/tr/td/span[2]/input[1]').send_keys(MrNo)
@@ -64,68 +63,85 @@ def pdf_downloader(excel_filename, sheet_name_val):
 
             # time.sleep(3)
 
-            waits('//*[@id="Billing_20Documents_tab"]/a')
-            time.sleep(3)
+            print("Program reached here 3")
+            try:
 
-            driver.find_element_by_xpath('//*[@id="Billing_20Documents_tab"]/a').click()
+                waits('//*[@id="Billing_20Documents_tab"]/a')
+                time.sleep(3)
+                driver.find_element_by_xpath('//*[@id="Billing_20Documents_tab"]/a').click()
+                print("Program reached here 2")
+                # time.sleep(5)
+                waits('//*[@id="lv_lv_wc_span"]/table/tbody/tr')
+                TableLen = len(driver.find_elements_by_xpath('//*[@id="lv_lv_wc_span"]/table/tbody/tr'))
+                print(TableLen)
+                ChemoTable = driver.find_element_by_xpath('//*[@id="lv_lv_wc_span"]/table')
 
-            # time.sleep(5)
-            waits('//*[@id="lv_lv_wc_span"]/table/tbody/tr')
-            TableLen = len(driver.find_elements_by_xpath('//*[@id="lv_lv_wc_span"]/table/tbody/tr'))
-            print(TableLen)
+                listData = []
 
-            ChemoTable = driver.find_element_by_xpath('//*[@id="lv_lv_wc_span"]/table')
+                #Date = driver.find_element_by_xpath('//*[@id="lv_lv_wc_span"]/table/tbody/tr[1]/td[2]/a').text
+                #print(Date)
+                if TableLen != 0:
+                    for row in range(TableLen):
+                        docID = driver.find_element_by_xpath(
+                            '//*[@id="lv_lv_wc_span"]/table/tbody/tr[{}]/td[1]'.format(row + 1)).text
 
-            listData = []
+                        docType = driver.find_element_by_xpath(
+                            '//*[@id="lv_lv_wc_span"]/table/tbody/tr[{}]/td[3]'.format(row + 1)).text
 
-            Date = "07-02-2020"
+                        if docType == 'Chemo Orders':
+                            serviceDate = driver.find_element_by_xpath(
+                                '//*[@id="lv_lv_wc_span"]/table/tbody/tr[{}]/td[2]'.format(row + 1)).text
 
-            for row in range(TableLen):
-                docID = driver.find_element_by_xpath(
-                    '//*[@id="lv_lv_wc_span"]/table/tbody/tr[{}]/td[1]'.format(row + 1)).text
-                serviceDate = driver.find_element_by_xpath(
-                    '//*[@id="lv_lv_wc_span"]/table/tbody/tr[{}]/td[2]'.format(row + 1)).text
-                docType = driver.find_element_by_xpath(
-                    '//*[@id="lv_lv_wc_span"]/table/tbody/tr[{}]/td[3]'.format(row + 1)).text
+                            break
 
-                if serviceDate == Date and docType == 'Chemo Orders':
-                    driver.find_element_by_xpath(
-                        '//*[@id="lv_lv_wc_span"]/table/tbody/tr[{}]/td[3]/a'.format(row + 1)).click()
-                    time.sleep(5)
-                    # waits('//*[@id="wc_main"]/div/div[2]/a')
-                    print(driver.find_element_by_xpath('//*[@id="wc_main"]/div/div[2]/a').get_attribute('href'))
+                    for row in range(TableLen):
+                        Date = driver.find_element_by_xpath(
+                                '//*[@id="lv_lv_wc_span"]/table/tbody/tr[{}]/td[2]'.format(row + 1)).text
 
-                    # ActionChains(driver).click('//*[@id="wc_main"]/div/div[2]/a').perform()
+                        docType = driver.find_element_by_xpath(
+                            '//*[@id="lv_lv_wc_span"]/table/tbody/tr[{}]/td[3]'.format(row + 1)).text
 
-                    # path = os.path.join(download_dir, MrNo)
-                    # try:
-                    #     os.mkdir(path)
-                    # except:
-                    #     os.mkdir(path+"({})".format(row))
+                        if Date == serviceDate and docType == 'Chemo Orders':
+                            driver.find_element_by_xpath(
+                                '//*[@id="lv_lv_wc_span"]/table/tbody/tr[{}]/td[3]/a'.format(row + 1)).click()
+                            time.sleep(5)
+                            # waits('//*[@id="wc_main"]/div/div[2]/a')
+                            print(driver.find_element_by_xpath('//*[@id="wc_main"]/div/div[2]/a').get_attribute('href'))
 
-                    # chrome_options.set_capability("prefs", "download.default_directory={}".format(path))
-                    # chrome_options.set_capability("download.default_directory", path)
-                    driver.get(driver.find_element_by_xpath('//*[@id="wc_main"]/div/div[2]/a').get_attribute('href'))
-                    driver.back()
-                    time.sleep(3)
-                    # for count, filename in enumerate(os.listdir(path)):
-                    src = os.path.join(download_dir, 'webchart.pdf')
-                    dst = os.path.join(download_dir, MrNo + ".pdf")
-                    try:
-                        os.rename(src, dst)
+                            # ActionChains(driver).click('//*[@id="wc_main"]/div/div[2]/a').perform()
 
-                    except:
-                        dst = os.path.join(download_dir, MrNo + "({}).pdf".format(row))
-                        os.rename(src, dst)
+                            # path = os.path.join(download_dir, MrNo)
+                            # try:
+                            #     os.mkdir(path)
+                            # except:
+                            #     os.mkdir(path+"({})".format(row))
 
-                # data = {
-                #     "DOC ID": docID,
-                #     "SERV DATE": serviceDate,
-                #     "DOC TYPE": docType
-                # }
-                #
-                # listData.append(data)
+                            # chrome_options.set_capability("prefs", "download.default_directory={}".format(path))
+                            # chrome_options.set_capability("download.default_directory", path)
+                            driver.get(driver.find_element_by_xpath('//*[@id="wc_main"]/div/div[2]/a').get_attribute('href'))
+                            driver.back()
+                            time.sleep(3)
+                            # for count, filename in enumerate(os.listdir(path)):
+                            src = os.path.join(download_dir, 'webchart.pdf')
+                            dst = os.path.join(download_dir, MrNo + ".pdf")
+                            try:
+                                os.rename(src, dst)
 
+                            except:
+                                dst = os.path.join(download_dir, MrNo + "({}).pdf".format(row))
+                                os.rename(src, dst)
+
+                    # data = {
+                    #     "DOC ID": docID,
+                    #     "SERV DATE": serviceDate,
+                    #     "DOC TYPE": docType
+                    # }
+                    #
+                    # listData.append(data)
+            except Exception as e:
+                print("Couldnt Find Billing Documents")
+                pass
+            print("Program reached here 1")
             driver.find_element_by_xpath('//*[@id="wc_homeicon"]').click()
             # time.sleep(3)
             waits('//*[@id="patsearch"]/table/tbody/tr/td/div/div/ul')
@@ -133,13 +149,11 @@ def pdf_downloader(excel_filename, sheet_name_val):
             # print(df2.to_string)
     except Exception as e:
         print("Couldnt Scrape the pdf for ", MrNo)
-        print("Error is ", e)
+        print("Error is ", str(e))
     driver.close()
     # break
 
 
 if __name__ == '__main__':
     # Calling function
-    sheet_name_val = "ApptData - 2020-08-19T144313.36"
-    excel_filename = "OMG 0826 Chemo Auth Report"
-    pdf_downloader(excel_filename, sheet_name_val)
+    pdf_downloader()
