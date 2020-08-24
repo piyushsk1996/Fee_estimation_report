@@ -27,13 +27,14 @@ def remove_pdfs():
     return "Pdf's removed successfully"
 
 
+sheet_name_val = "ApptData - 2020-08-19T144313.36"
 excel_filename = "OMG 0826 Chemo Auth Report"
 
 if __name__ == '__main__':
     # Downloading PDF's
-    pdfDownload.pdf_downloader(excel_filename)
+    pdfDownload.pdf_downloader(excel_filename, sheet_name_val)
     # Pre-process the data
-    data_prepocessing.pre_process_data()
+    # data_prepocessing.pre_process_data()
     # Remove downloaded pdf's
     # remove_pdfs()
     # Generate Excel report

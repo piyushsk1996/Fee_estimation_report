@@ -12,7 +12,7 @@ import pandas as pd
 from pathlib import Path
 
 
-def pdf_downloader(excel_filename):
+def pdf_downloader(excel_filename, sheet_name_val):
     mypath = Path().absolute()
 
     # Defining path of the files
@@ -37,7 +37,7 @@ def pdf_downloader(excel_filename):
     def waits(el):
         WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.XPATH, el)))
 
-    df = pd.read_excel(r"./All_Files/" + excel_filename + ".xlsx", sheet_name='OMG 0702 Chemo Auth Report')
+    df = pd.read_excel(r"./All_Files/" + excel_filename + ".xlsx", sheet_name=sheet_name_val)
 
     ##Login to site
 
@@ -133,12 +133,13 @@ def pdf_downloader(excel_filename):
             # print(df2.to_string)
     except Exception as e:
         print("Couldnt Scrape the pdf for ", MrNo)
-        print("Error is ", str(e))
+        print("Error is ", e)
     driver.close()
     # break
 
 
 if __name__ == '__main__':
     # Calling function
+    sheet_name_val = "ApptData - 2020-08-19T144313.36"
     excel_filename = "OMG 0826 Chemo Auth Report"
-    pdf_downloader(excel_filename)
+    pdf_downloader(excel_filename, sheet_name_val)
