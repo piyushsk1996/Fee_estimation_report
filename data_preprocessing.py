@@ -32,9 +32,12 @@ def pre_process_data():
         for file in files:
             i += 1
             print(file)
-            # Getting Tables using camelot and setting options line scale=40 and shift text = ['']
-            tables = camelot.read_pdf("./All_Pdf_Files/" + file, line_scale=40, shift_text=[' '],
-                                      layout_kwargs={'detect_vertical': False})
+            try:
+                # Getting Tables using camelot and setting options line scale=40 and shift text = ['']
+                tables = camelot.read_pdf("./All_Pdf_Files/" + file, line_scale=40, shift_text=[' '],
+                                          layout_kwargs={'detect_vertical': False})
+            except Exception as e:
+                continue
             # Maximum range of 4 to cover all tables
             for i in range(4):
                 try:
@@ -47,7 +50,7 @@ def pre_process_data():
                         patient_name = str(test_df.loc[0, 5]).replace("Patient:\n", "").split('\n')[0]
 
                     if "PRE-TREATMENT" == str(test_df.loc[0, 0]) or "TREATMENT" == str(test_df.loc[0, 0]):
-
+                        print(test_df)
                         # print(str(test_df.loc[0, 0].split()))
                         # Initialzing empty dictionary to store treatment data
                         treatment_dict = dict()
@@ -68,26 +71,35 @@ def pre_process_data():
                         test_df.replace('', 0, inplace=True)
 
                         for index, row in test_df.iterrows():
-
+                            # Checking strings for conditions
                             if index != 0 and str(row[0]) != str(0):
                                 if "sodium chloride" not in str(row[0]):
                                     if "magnesium" not in str(row[0]):
                                         if "potassium" not in str(row[0]):
-                                            if "immune" in str(row[0]):
-                                                treatment = str(row[0])
-                                            else:
-                                                treatment = str(row[0]).split(' ')[0]
-                                            if ")" not in treatment:
-                                                if "Delivery" not in treatment:
-                                                    if "Dosed" not in treatment:
-                                                        if "LAR" not in treatment:
-                                                            if "(" not in treatment:
-                                                                treatment_dict.setdefault("Treatment", []).append(
-                                                                    treatment)
+                                            if "5%" not in str(row[0]):
+                                                if "immune" in str(row[0]):
 
+                                                    treatment = str(row[0])
+                                                else:
+                                                    treatment = str(row[0]).split(' ')[0]
+                                                if ")" not in treatment:
+                                                    if "Delivery" not in treatment:
+                                                        if "Dosed" not in treatment:
+                                                            if "LAR" not in treatment:
+                                                                if "(" not in treatment:
+                                                                    if "Patient" not in treatment:
+                                                                        if "and" not in treatment:
+                                                                            if "Continuatin" not in treatment:
+                                                                                # appending to the dictionary
+                                                                                treatment_dict.setdefault("Treatment",
+                                                                                                          []).append(
+                                                                                    treatment)
+                                                    # Checking dosage strings for conditions
                                                     dosage = str(row[1]).split('\n')[0]
                                                     if "(d" not in dosage:
-                                                        treatment_dict.setdefault("Dosage", []).append(dosage)
+                                                        if dosage != str(0):
+                                                            if "KVO, 250 mL" not in dosage:
+                                                                treatment_dict.setdefault("Dosage", []).append(dosage)
 
                         # Constructing dataframe from dictionary values
                         df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in treatment_dict.items()]))
@@ -109,6 +121,7 @@ def pre_process_data():
     # Dropping rows from dataframe based on given condition
     # Dropping rows where dosage and treatment is null
     final_df = final_df.drop(final_df[(final_df.Treatment == 0) & (final_df.Dosage == 0)].index)
+
     # Replacing zero values to nan
     final_df.replace(0, np.nan, inplace=True)
     # Exporting dataframe to csv

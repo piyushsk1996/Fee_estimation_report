@@ -29,10 +29,10 @@ def remove_pdfs():
 
 if __name__ == '__main__':
     # Downloading PDF's
-    pdfDownload.pdf_downloader()
+    # pdfDownload.pdf_downloader()
     # Pre-process the data
     # data_preprocessing.pre_process_data()
     # Remove downloaded pdf's
     # remove_pdfs()
     # Generate Excel report
-    # excel_writer_module.generate_excel(filename='MHP FEE ESTIMATE Excel Report.xlsx', foldername='Excel_files')
+    excel_writer_module.generate_excel(filename='MHP FEE ESTIMATE Excel Report.xlsx', foldername='Excel_files')

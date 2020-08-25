@@ -4,6 +4,7 @@ from StyleFrame import StyleFrame
 from datetime import date
 from datetime import datetime
 from itertools import tee, islice, chain
+import numpy as np
 
 # Setting Options for printing pandas dataframe
 desired_width = 520
@@ -81,6 +82,13 @@ def generate_excel(filename, foldername):
         'bg_color': '#FFC000',
     })
 
+    formula_cell_format = workbook.add_format({
+        'font_size': 11,
+        'font': 'Calibri',
+        'align': 'center',
+        'bg_color': '#B2B2B2',
+    })
+
     # Setting Column widths
     worksheet.set_column('A:A', 26.56)
     worksheet.set_column('B:B', 15.22, date_format)
@@ -89,6 +97,8 @@ def generate_excel(filename, foldername):
     worksheet.set_column('E:E', 28.33)
     worksheet.set_column('F:F', 26.67)
     worksheet.set_column('G:G', 15.78)
+    worksheet.set_column('H:H', 17.11)
+    worksheet.set_column('I:I', 15.56)
 
     # Setting Row height
     worksheet.set_row(1, 167)
@@ -104,23 +114,24 @@ def generate_excel(filename, foldername):
     worksheet.write("E2", "Secondary Insurance", header_format)
     worksheet.write("F2", "Program", header_format)
     worksheet.write("G2", "Patient treatment", header_format)
+    worksheet.write("H2", "Treatment quantity", header_format)
+    worksheet.write("I2", "Standard quantity", header_format)
 
     # Reading report
-    df_data_auth_report = pd.read_excel("./All_Files/OMG 0702 Chemo Auth Report.xlsx")
+    df_data_auth_report = pd.read_excel("./All_Files/OMG 0826 Chemo Auth Report.xlsx")
     # Upper casing patient name column for matching
     df_data_auth_report['Patient Name'] = df_data_auth_report['Patient Name'].str.upper()
     # Setting NAN values to zero for easier handling
     df_data_auth_report = df_data_auth_report.fillna(0)
 
+    # Reading J and Q code data from source
+    df_J_Q = pd.read_excel("./All_Files/J and Q codes.xlsx")
+    print(df_J_Q)
+    # Writing J and Q codes data to current excel
+    df_J_Q.to_excel(writer, index=False, sheet_name="J and Q Codes par amount", startrow=0, startcol=0)
+
     # Reading CSV with treatment information
     df_read_csv = pd.read_csv('./All_CSVs/' + today_date + '.csv')
-
-    # Create list of rows to be deleted according to the given conditions
-    # 1. Sodium Chloride
-    # 2. Oral Drugs ( to be added)
-    # 3. Famotidine (to be added. Scenario to be tested)
-    # 4. Tylenol (to be added. Scenario to be tested)
-    # Dropping rows from dataframe based on given condition
 
     # Outputting the merged dataframe to csv to check whether key words have been removed
 
@@ -131,7 +142,8 @@ def generate_excel(filename, foldername):
     # calculating number of rows required for each patient
     patient_dict = dict()
     df_read_csv = df_read_csv.fillna(0)
-    for name, treatment_name in zip(df_read_csv["Patient Name"], df_read_csv["Treatment"]):
+    for name, treatment_name, dosage in zip(df_read_csv["Patient Name"], df_read_csv["Treatment"],
+                                            df_read_csv["Dosage"]):
         if treatment_name != 0:
 
             treatment = treatment_name.split(' ')[0]
@@ -141,8 +153,22 @@ def generate_excel(filename, foldername):
             for index, row in df_codes.iterrows():
                 if treatment.upper() in row['Short Description']:
                     hcpcs_code = df_codes.loc[index, "HCPCS Code"]
+
+                    temp_dict = {hcpcs_code: dosage}
+
                     if name != 0:
-                        patient_dict.setdefault(name, []).append(hcpcs_code)
+                        first_name = name.split(',')[1].strip().split(' ')[0]
+                        last_name = name.split(',')[0].strip()
+                        try:
+                            middle_name = name.split(',')[1].strip().split(' ')[1]
+                        except Exception as e:
+                            middle_name = ''
+                        if middle_name == '':
+                            patient_dict.setdefault(last_name + ', ' + first_name, []).append(temp_dict)
+                            # patient_dict[last_name + ', ' + first_name][hcpcs_code] = dosage
+                        else:
+                            patient_dict.setdefault(last_name + ', ' + first_name + ', ' + middle_name, []).append(
+                                temp_dict)
 
     print(patient_dict)
     # Looping through column Patient Name and writing each name to the excel sheet
@@ -156,10 +182,36 @@ def generate_excel(filename, foldername):
                                 "Insurance "
                                 "Name"],
             df_data_auth_report["Location"], ):
-        print(name)
+
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
         # Splitting Name in to first name and last name
-        first_name = name.split(',')[1]
+        first_name = name.split(',')[1].strip()
         last_name = name.split(',')[0]
+
+        df_program = pd.read_excel("./All_Files/Program Pts (2).xlsx")
+        df_program = df_program.replace(np.nan, '', regex=True)
+
+        df_program_dict = dict()
+        df_program_dict['program_name'] = None
+
+        try:
+
+            for index_val, row_val in df_program.iterrows():
+
+                if last_name == str(row_val['Last Name']).strip().upper() and first_name == str(
+                        row_val['First Name'].strip().upper()):
+                    program_index = index_val
+                    program_name = df_program.loc[program_index, 'Program']
+                    df_program_dict['program_name'] = program_name
+                    print(df_program_dict)
+        except Exception as e:
+            print("Program not found")
+            df_program_dict['program_name'] = None
+
+        if name in patient_dict.keys():
+            span_patient = len(patient_dict[name])
+
+        initial_row_no = initial_row_no + span_patient
 
         # Splitting report date
         report_date = date_value.split(' ')[0]
@@ -196,7 +248,24 @@ def generate_excel(filename, foldername):
         else:
             worksheet.write(new_row_no, 4, secondary_insurance, custom_cell_format)
 
-        worksheet.write_blank(new_row_no, 5, None, custom_cell_format)
+        worksheet.write(new_row_no, 5, df_program_dict['program_name'], custom_cell_format)
+
+        cpt_code_row_no = new_row_no - 1
+        # writing cpt codes
+        for key, values in patient_dict.items():
+            key_first_name = key.split(',')[1].strip().split(' ')[0]
+            key_last_name = key.split(',')[0].strip()
+
+            if key_first_name == first_name and key_last_name == last_name:
+                for cpt_code in values:
+                    for cpt_key, cpt_val in cpt_code.items():
+                        worksheet.write(cpt_code_row_no, 6, cpt_key, custom_cell_format)
+                        worksheet.write(cpt_code_row_no, 7, cpt_val, custom_cell_format)
+                        worksheet.write_formula(cpt_code_row_no, 8,
+                                                "=VLOOKUP(G" + str(cpt_code_row_no) + ",'J and Q Codes par amount'!A:C,"
+                                                                                      "2,FALSE)",
+                                                formula_cell_format)
+                    cpt_code_row_no -= 1
 
         # Incrementing Counter
         initial_row_no += 3
